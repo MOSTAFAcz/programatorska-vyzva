@@ -1,7 +1,7 @@
 import unittest
 from datetime import datetime
 
-import main
+import dochazka
 
 
 class AttendanceAppTests(unittest.TestCase):
@@ -28,18 +28,18 @@ class AttendanceAppTests(unittest.TestCase):
         ]
 
     def test_employee_summary_counts_worked_hours(self):
-        summary = main.calculate_employee_summary(self.records)
+        summary = dochazka.calculate_employee_summary(self.records)
         adam = next(item for item in summary if item["zaměstnanec"] == "Adam Novák")
         self.assertAlmostEqual(adam["práce_hodin"], 16.33, places=2)
         self.assertAlmostEqual(adam["průměrně_hodin"], 8.17, places=2)
 
     def test_late_minutes_are_counted(self):
-        summary = main.calculate_employee_summary(self.records)
+        summary = dochazka.calculate_employee_summary(self.records)
         barbara = next(item for item in summary if item["zaměstnanec"] == "Barbora Svobodová")
         self.assertEqual(barbara["zpoždění_minut"], 10)
 
     def test_daily_summary_aggregates_hours(self):
-        daily = main.calculate_daily_summary(self.records)
+        daily = dochazka.calculate_daily_summary(self.records)
         self.assertEqual(len(daily), 2)
         self.assertAlmostEqual(daily[0]["celkem_hodin"], 16.75, places=2)
 
