@@ -1,5 +1,6 @@
 import unittest
 from datetime import datetime
+from tempfile import TemporaryDirectory
 
 import dochazka
 
@@ -42,6 +43,13 @@ class AttendanceAppTests(unittest.TestCase):
         daily = dochazka.calculate_daily_summary(self.records)
         self.assertEqual(len(daily), 2)
         self.assertAlmostEqual(daily[0]["celkem_hodin"], 16.75, places=2)
+
+    def test_export_charts_creates_png_files(self):
+        with TemporaryDirectory() as output_dir:
+            chart_paths = dochazka.export_charts(self.records, output_dir)
+
+            self.assertEqual(len(chart_paths), 2)
+            self.assertTrue(all(path.is_file() for path in chart_paths))
 
 
 if __name__ == "__main__":

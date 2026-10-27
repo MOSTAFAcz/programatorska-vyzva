@@ -3,6 +3,9 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
@@ -179,6 +182,49 @@ def export_report(records, type_report):
     console.print(f"[green]Export uložen do:[/green] {filename}")
 
 
+def export_charts(records, target_dir=Path("exports")):
+    """Vytvoří grafy odpracovaných hodin zaměstnanců a jednotlivých dnů."""
+    employee_summary = calculate_employee_summary(records)
+    daily_summary = calculate_daily_summary(records)
+    if not employee_summary or not daily_summary:
+        console.print("[yellow]Pro vytvoření grafů nejsou k dispozici žádná data.[/yellow]")
+        return []
+
+    target_dir = Path(target_dir)
+    target_dir.mkdir(parents=True, exist_ok=True)
+    employee_path = target_dir / "employee_hours.png"
+    daily_path = target_dir / "daily_hours.png"
+
+    figure, axis = plt.subplots(figsize=(10, 5))
+    axis.bar(
+        [item["zaměstnanec"] for item in employee_summary],
+        [item["práce_hodin"] for item in employee_summary],
+        color="steelblue",
+    )
+    axis.set(title="Odpracované hodiny podle zaměstnance", ylabel="Hodiny")
+    axis.tick_params(axis="x", labelrotation=35)
+    axis.grid(axis="y", alpha=0.25)
+    figure.tight_layout()
+    figure.savefig(employee_path, dpi=150)
+    plt.close(figure)
+
+    figure, axis = plt.subplots(figsize=(10, 5))
+    axis.bar(
+        [item["datum"] for item in daily_summary],
+        [item["celkem_hodin"] for item in daily_summary],
+        color="seagreen",
+    )
+    axis.set(title="Odpracované hodiny podle dne", ylabel="Hodiny")
+    axis.tick_params(axis="x", labelrotation=35)
+    axis.grid(axis="y", alpha=0.25)
+    figure.tight_layout()
+    figure.savefig(daily_path, dpi=150)
+    plt.close(figure)
+
+    console.print(f"[green]Grafy uloženy do:[/green] {target_dir}")
+    return [employee_path, daily_path]
+
+
 def print_employee_detail(records):
     name = input("Zadejte jméno zaměstnance: ").strip()
     matches = find_employee_records(records, name)
@@ -225,6 +271,7 @@ def menu():
                 "[4] Nejproduktivnější zaměstnanci\n"
                 "[5] Detail zaměstnance\n"
                 "[6] Export reportu do CSV\n"
+                "[7] Vytvořit grafy\n"
                 "[0] Ukončit\n",
                 title="Hlavní menu",
             )
@@ -293,6 +340,9 @@ def menu():
                 export_report(records, export_type)
             else:
                 console.print("[red]Neplatný typ reportu.[/red]")
+
+        elif volba == "7":
+            export_charts(records)
 
         elif volba == "0":
             console.print("[green]Ukončuji aplikaci.[/green]")
